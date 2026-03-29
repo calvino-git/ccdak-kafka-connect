@@ -1,11 +1,14 @@
 package com.linuxacademy.ccdak.kafkaJavaConnect;
 
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.kafka.common.config.TopicConfig;
+import org.apache.kafka.common.internals.Topic;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Properties;
@@ -22,14 +25,16 @@ public class Main {
         props.put(ProducerConfig.RETRIES_CONFIG, 3);
         props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
 
+        NewTopic newTopic = new NewTopic("stateless-transformation-input-topic", 5, (short)3);
+
         try(Producer<String, String> producer = new KafkaProducer<>(props)){
-            for(int i = 0; i < 1000; i+=5){
+            for(int i = 0; i < 1000; i++){
                 String randomString = RandomStringUtils.randomAlphabetic(1);
                 System.out.println(i + "->" + randomString);
-                Future<RecordMetadata> future = producer.send(new ProducerRecord<>("streams-input-topic", Integer.toString(i), randomString));
+                Future<RecordMetadata> future = producer.send(new ProducerRecord<>("stateless-transformation-input-topic", Integer.toString(i), randomString));
                 RecordMetadata metadata = future.get();
                 System.out.println(metadata);
-                Thread.sleep(1000);
+                Thread.sleep(200);
             }
         }catch (Exception e) {
             System.out.println(e.getMessage());
